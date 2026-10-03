@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SML SMOKE 67</title>
+<style>
+:root{--bg:#050507;--card:rgba(18,12,28,.5);--pu:#9b4dff;--pu2:#c08cff;--tx:#fff;--mut:#a9a2b8;--ln:rgba(155,77,255,.35);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+#smoke{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+#app{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:16px 16px 90px;min-height:100%}
+.logo{text-align:center;margin:10px 0 4px;font-weight:900;letter-spacing:4px;font-size:30px;text-shadow:0 0 18px var(--pu)}
+.logo b{color:var(--pu2)}
+.tag{text-align:center;color:var(--mut);font-size:13px;margin-bottom:22px}
+h2{margin:6px 0 14px;font-size:22px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:18px;padding:18px 12px;text-align:center;cursor:pointer;backdrop-filter:blur(2px);transition:.2s}
+.card:active{transform:scale(.97);border-color:var(--pu);box-shadow:0 0 22px rgba(155,77,255,.5)}
+.card .ic{font-size:38px;margin-bottom:8px}
+.card .nm{font-weight:700;font-size:15px}
+.card .sb{color:var(--mut);font-size:12px;margin-top:4px}
+.wide{grid-column:1/-1;background:linear-gradient(135deg,#6a1fd1,#9b4dff);border:none;display:flex;align-items:center;justify-content:center;gap:12px;padding:16px}
+.wide .ic{margin:0;font-size:28px}
+.row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:14px;margin-bottom:10px;backdrop-filter:blur(2px)}
+.sub{cursor:pointer;justify-content:space-between;font-weight:600}
+.sub:active{border-color:var(--pu)}
+.sub span{color:var(--pu2)}
+.thumb img,.card .ic img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
+.card .ic img{width:64px;height:64px;border-radius:16px;margin:0 auto}
+.thumb{overflow:hidden;width:56px;height:56px;border-radius:14px;background:radial-gradient(circle at 30% 30%,#c08cff,#3a1170);display:flex;align-items:center;justify-content:center;font-size:28px;flex:none}
+.inf{flex:1;min-width:0}
+.inf .n{font-weight:700;font-size:15px}
+.inf .d{color:var(--mut);font-size:12px;margin:2px 0 4px}
+.pr{font-weight:800;color:var(--pu2)}
+.btn{background:var(--pu);color:#fff;border:0;border-radius:12px;padding:10px 14px;font-weight:700;font-size:14px;cursor:pointer}
+.btn:active{filter:brightness(.85)}
+.btn.o{background:transparent;border:1px solid var(--pu);color:var(--pu2)}
+.back{background:none;border:0;color:var(--pu2);font-size:15px;cursor:pointer;padding:6px 0;margin-bottom:6px}
+.qty{display:flex;align-items:center;gap:10px}
+.qty button{width:30px;height:30px;border-radius:50%;border:1px solid var(--pu);background:transparent;color:#fff;font-size:18px;cursor:pointer}
+.total{display:flex;justify-content:space-between;font-size:18px;font-weight:800;margin:16px 4px}
+.empty{text-align:center;color:var(--mut);margin:50px 0}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:5;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,#050507 40%)}
+.bar button{display:block;width:100%;max-width:528px;margin:0 auto;padding:14px;font-size:16px}
+#age{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:24px}
+#age div{background:#0d0916;border:1px solid var(--pu);border-radius:20px;padding:26px;text-align:center;max-width:340px;box-shadow:0 0 40px rgba(155,77,255,.4)}
+#age h3{margin:0 0 10px;font-size:22px}
+#age p{color:var(--mut);font-size:14px;margin:0 0 18px}
+.note{text-align:center;color:var(--mut);font-size:11px;margin-top:22px}
+</style>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<canvas id="smoke"></canvas>
+<div id="app"></div>
+<div class="bar" id="bar" style="display:none"><button class="btn" onclick="go('cart')">🛒 Корзина · <span id="bc"></span></button></div>
+<div id="age"><div><h3>🔞 SML SMOKE 67</h3><p>Товары только для лиц старше 18 лет. Вам исполнилось 18?</p><button class="btn" onclick="document.getElementById('age').remove()">Мне есть 18</button><br><br><button class="btn o" onclick="location.href='about:blank'">Нет</button></div></div>
+
+<script>
+// ============ РЕДАКТИРОВАНИЕ МАГАЗИНА ============
+// Раздел:  {id, name, ic (эмодзи), img (ссылка на фото, можно оставить пустым), subs:[...]}
+// Подраздел: {n:'Название', i:[ товары ]}
+// Товар: ['Название','Описание',ЦЕНА,'ссылка на фото (необязательно)']
+// Пример:  ['Pod Lite Black','Компактная',2490,'img/pod-lite.jpg']
+// Фото раздела: добавьте  img:'img/vapes.jpg'  рядом с name
+// ===================================================
+const CATS=[
+{id:'vape',name:'Вейпы',ic:'💨',subs:[
+ {n:'Pod-системы',i:[['Pod Lite Black','Компактная, 800 мАч',2490],['Pod Pro Violet','Регулируемая подача',3290]]},
+ {n:'Боксмоды',i:[['Box Mod 100W','Один аккумулятор',4990],['Box Mod 200W','Два аккумулятора, экран',6990]]},
+ {n:'Стартовые наборы',i:[['Starter Kit Mini','Для новичков',2990],['Starter Kit Plus','Набор + 2 испарителя',3990]]}]},
+{id:'liq',name:'Жидкости',ic:'🧪',subs:[
+ {n:'Солевые',i:[['Salt Grape Ice','30 мл, 20 мг',590],['Salt Berry Mix','30 мл, 20 мг',590]]},
+ {n:'Классические',i:[['Classic Mango','60 мл, 3 мг',690],['Classic Mint','60 мл, 3 мг',690]]},
+ {n:'Табачные',i:[['Tobacco Gold','30 мл, 12 мг',620],['Tobacco Dark','30 мл, 12 мг',620]]}]},
+{id:'disp',name:'Одноразки',ic:'🔋',subs:[
+ {n:'До 1500 затяжек',i:[['Mini 1500 Peach','1500 затяжек',690],['Mini 1500 Cola','1500 затяжек',690]]},
+ {n:'3000–6000 затяжек',i:[['Max 5000 Blueberry','5000 затяжек, Type-C',1190],['Max 6000 Watermelon','6000 затяжек, Type-C',1290]]},
+ {n:'8000+ затяжек',i:[['Ultra 9000 Grape','9000 затяжек, дисплей',1590],['Ultra 12000 Mix','12000 затяжек, дисплей',1890]]}]},
+{id:'coil',name:'Испарители / картриджи',ic:'⚙️',subs:[
+ {n:'Картриджи',i:[['Pod Cartridge 0.8Ω','Упаковка 2 шт.',490],['Pod Cartridge 1.0Ω','Упаковка 2 шт.',490]]},
+ {n:'Испарители',i:[['Coil Mesh 0.6Ω','Упаковка 5 шт.',790],['Coil Mesh 0.4Ω','Упаковка 5 шт.',790]]},
+ {n:'Аксессуары',i:[['Аккумулятор 18650','3000 мАч',590],['Зарядное Type-C','Быстрая зарядка',390]]}]}
+];
+const EMO={vape:'💨',liq:'🧪',disp:'🔋',coil:'⚙️'};
+let st={v:'home',c:null,s:null},cart={};
+const $=id=>document.getElementById(id),A=$('app');
+const pic=(u,e)=>u?`<img src="${u}" alt="" loading="lazy" onerror="this.replaceWith('${e}')">`:e;
+const fmt=n=>n.toLocaleString('ru-RU')+' ₽';
+const tg=window.Telegram&&window.Telegram.WebApp;
+if(tg){try{tg.ready();tg.expand();tg.setHeaderColor('#050507');tg.setBackgroundColor('#050507')}catch(e){}}
+
+// ---------- Навигация ----------
+function go(v,c,s){st={v,c:c??st.c,s:s??st.s};render();scrollTo(0,0)}
+function back(){if(st.v==='prod')go('subs');else go('home')}
+function key(c,s,i){return c+'|'+s+'|'+i}
+function prodOf(k){const[c,s,i]=k.split('|');const p=CATS.find(x=>x.id===c).subs[s].i[i];return{n:p[0],d:p[1],p:p[2],img:p[3],e:EMO[c]}}
+function add(k,d){cart[k]=(cart[k]||0)+d;if(cart[k]<=0)delete cart[k];render()}
+const count=()=>Object.values(cart).reduce((a,b)=>a+b,0);
+const sum=()=>Object.entries(cart).reduce((a,[k,q])=>a+prodOf(k).p*q,0);
+
+// ---------- Экраны ----------
+function render(){
+ let h='<div class="logo">SML <b>SMOKE</b> 67</div>';
+ if(st.v==='home'){
+  h+='<div class="tag">Выберите раздел</div><div class="grid">';
+  CATS.forEach(c=>h+=`<div class="card" onclick="go('subs','${c.id}')"><div class="ic">${pic(c.img,c.ic)}</div><div class="nm">${c.name}</div><div class="sb">${c.subs.length} подраздела</div></div>`);
+  h+=`<div class="card wide" onclick="go('cart')"><div class="ic">🛒</div><div class="nm">Корзина${count()?' · '+count():''}</div></div></div>`;
+  h+='<div class="note">18+ · Продажа только совершеннолетним</div>';
+ }
+ else if(st.v==='subs'){
+  const c=CATS.find(x=>x.id===st.c);
+  h+=`<button class="back" onclick="back()">‹ Назад</button><h2>${c.ic} ${c.name}</h2>`;
+  c.subs.forEach((s,i)=>h+=`<div class="row sub" onclick="go('prod',null,${i})">${s.n}<span>›</span></div>`);
+ }
+ else if(st.v==='prod'){
+  const c=CATS.find(x=>x.id===st.c),s=c.subs[st.s];
+  h+=`<button class="back" onclick="go('subs')">‹ ${c.name}</button><h2>${s.n}</h2>`;
+  s.i.forEach((p,i)=>{const k=key(c.id,st.s,i),q=cart[k]||0;
+   h+=`<div class="row"><div class="thumb">${pic(p[3],c.ic)}</div><div class="inf"><div class="n">${p[0]}</div><div class="d">${p[1]}</div><div class="pr">${fmt(p[2])}</div></div>`+
+   (q?`<div class="qty"><button onclick="add('${k}',-1)">−</button><b>${q}</b><button onclick="add('${k}',1)">+</button></div>`:`<button class="btn" onclick="add('${k}',1)">В корзину</button>`)+'</div>'});
+ }
+ else if(st.v==='cart'){
+  h+=`<button class="back" onclick="go('home')">‹ Разделы</button><h2>🛒 Корзина</h2>`;
+  const ks=Object.keys(cart);
+  if(!ks.length)h+='<div class="empty">Корзина пуста</div>';
+  else{
+   ks.forEach(k=>{const p=prodOf(k),q=cart[k];
+    h+=`<div class="row"><div class="thumb">${pic(p.img,p.e)}</div><div class="inf"><div class="n">${p.n}</div><div class="d">${p.d}</div><div class="pr">${fmt(p.p*q)}</div></div><div class="qty"><button onclick="add('${k}',-1)">−</button><b>${q}</b><button onclick="add('${k}',1)">+</button></div></div>`});
+   h+=`<div class="total"><span>Итого</span><span>${fmt(sum())}</span></div><button class="btn" style="width:100%;padding:14px;font-size:16px" onclick="order()">Оформить заказ</button>`;
+  }
+ }
+ A.innerHTML=h;
+ const n=count(),b=$('bar');
+ b.style.display=(n&&st.v!=='cart'&&st.v!=='home')?'block':'none';
+ $('bc').textContent=n+' шт. · '+fmt(sum());
+}
+function order(){
+ const items=Object.entries(cart).map(([k,q])=>({name:prodOf(k).n,qty:q,price:prodOf(k).p}));
+ const data={shop:'SML SMOKE 67',items,total:sum()};
+ if(tg&&tg.sendData){tg.sendData(JSON.stringify(data))}
+ else{alert('Заказ сформирован на сумму '+fmt(sum())+'. В Telegram он будет отправлен боту.')}
+ cart={};go('home');
+}
+
+// ---------- Дым ----------
+const cv=$('smoke'),cx=cv.getContext('2d');let W,H,P=[];
+function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight}
+addEventListener('resize',rs);rs();
+function mk(init){return{x:Math.random()*W,y:init?Math.random()*H:H+120,r:90+Math.random()*150,vx:(Math.random()-.5)*.35,vy:-(.25+Math.random()*.55),a:.16+Math.random()*.2,ph:Math.random()*6.28,hue:Math.random()<.7?270:285}}
+for(let i=0;i<34;i++)P.push(mk(true));
+let t=0;
+(function loop(){
+ t+=.01;cx.fillStyle='#050507';cx.fillRect(0,0,W,H);cx.globalCompositeOperation='lighter';
+ P.forEach((p,i)=>{
+  p.x+=p.vx+Math.sin(t+p.ph)*.4;p.y+=p.vy;p.r+=.12;
+  const fade=Math.min(1,(p.y+p.r)/(H*.5));
+  const g=cx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+  g.addColorStop(0,`hsla(${p.hue},85%,55%,${p.a*fade})`);g.addColorStop(.5,`hsla(${p.hue},70%,30%,${p.a*.5*fade})`);g.addColorStop(1,'hsla(270,60%,20%,0)');
+  cx.fillStyle=g;cx.beginPath();cx.arc(p.x,p.y,p.r,0,6.28);cx.fill();
+  if(p.y<-p.r||p.r>320)P[i]=mk(false);
+ });
+ cx.globalCompositeOperation='source-over';requestAnimationFrame(loop);
+})();
+render();
+</script>
+</body>
+</html>
